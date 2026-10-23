@@ -1,0 +1,20 @@
+'use client';
+import {CalendarDays,MapPin,Pencil,ChevronDown,ArrowUpRight} from 'lucide-react';
+import {useLocale} from './locale';
+import {contentText} from '../lib/content';
+import type {Entry} from '../lib/model';
+import {readTravelJournal,journalText,journalPlaces,type TravelJournal} from '../lib/travel';
+export function TripCard({entry:e,index=0,onEdit}:{entry:Entry;index?:number;onEdit:(e:Entry)=>void}){
+ const {t:tx,locale}=useLocale();const journal=readTravelJournal(e.data);const notes=contentText(e.data,'notes',locale);const start=String(e.data.startDate||e.date),end=String(e.data.endDate||'');
+ return <article className="travel-journal">
+  <header className="journal-heading"><div className="journal-heading-copy"><div className="journal-kicker"><span>No. {String(index+1).padStart(2,'0')}</span><span><MapPin size={13}/>{contentText(e.data,'location',locale)||tx('目的地待定')}</span></div><h2>{contentText(e.data,'title',locale)}</h2>{journal&&<p className="journal-intro">{journalText(journal.summary,locale)}</p>}</div>
+   <div className="journal-heading-meta"><span className="journal-dates"><CalendarDays size={14}/>{start}{end&&end!==start&&` — ${end}`}</span><div><span className="journal-status">{e.data.status==='visited'?tx('已走过'):tx('计划中')}</span><button className="journal-edit" onClick={()=>onEdit(e)} aria-label={tx('编辑旅行记录')}><Pencil size={14}/>{tx('编辑')}</button></div></div>
+  </header>
+  {journal?<>
+   <div className="journal-days">{journal.days.map((day,i)=><section className="journal-day" key={day.date} aria-label={journalText(day.title,locale)}><header><span className="journal-day-number">DAY {String(i+1).padStart(2,'0')}</span><time dateTime={day.date}>{day.date.slice(5).replace('-','.')}</time>{day.basis==='confirmed'&&<span className="day-confirmed">{tx('已确认到访')}</span>}</header><h3>{journalText(day.title,locale)}</h3><ol className="journal-places">{journalPlaces(day,locale).map((place,i)=><li key={i}><span className="route-dot" aria-hidden="true"/>{place}</li>)}</ol>{journalText(day.caption,locale)&&<p className="journal-day-caption">{journalText(day.caption,locale)}</p>}</section>)}</div>
+   <footer className="journal-footer">{journal.memories.length>0&&<div className="journal-memories"><span>{tx('留下一点记忆')}</span>{journal.memories.map((memory,i)=><p key={i}>{journalText(memory,locale)}</p>)}</div>}{journal.days.some(d=>d.basis==='itinerary')&&<p className="journal-source-note">{tx('路线按行程单整理，实际到访待确认。')}</p>}</footer>
+  </>:<p className="journal-fallback">{notes.length>240?notes.slice(0,240)+'…':notes||tx('行程和旅途片段，等待慢慢补充。')}<button className="text-button" onClick={()=>onEdit(e)}>{tx('整理旅行片段')}<ArrowUpRight size={14}/></button></p>}
+  {notes&&<details className="journal-original"><summary>{tx('原始行程与交通信息')}<ChevronDown size={14}/></summary><div><p>{notes}</p></div></details>}
+ </article>
+}
+export function TravelJournalFields({journal}:{journal:TravelJournal}){const {t:tx,locale}=useLocale();return <section className="journal-editor"><label className="field"><span>{tx('旅程概述')}</span><textarea name="journal.summary" defaultValue={journalText(journal.summary,locale)} maxLength={locale==='en'?2400:1600} rows={3}/></label>{journal.days.map((day,i)=><details className="journal-edit-day" key={day.date}><summary>DAY {String(i+1).padStart(2,'0')} · {day.date} · {journalText(day.title,locale)}</summary><label className="field"><span>{tx('当日主题')}</span><input name={`journal.${i}.title`} defaultValue={journalText(day.title,locale)} maxLength={1600}/></label><label className="field"><span>{tx('地点路线（每行一站）')}</span><textarea name={`journal.${i}.places`} defaultValue={journalPlaces(day,locale).join('\n')} rows={5}/></label><label className="field"><span>{tx('这一天的片段')}</span><textarea name={`journal.${i}.caption`} defaultValue={journalText(day.caption,locale)} maxLength={locale==='en'?2400:1600} rows={3}/></label></details>)}{journal.memories.map((memory,i)=><label className="field" key={i}><span>{tx('留下一点记忆')}</span><textarea name={`journal.memory.${i}`} defaultValue={journalText(memory,locale)} maxLength={locale==='en'?2400:1600} rows={3}/></label>)}</section>}

@@ -1,0 +1,6 @@
+{
+  "records": [
+    {"kind":"note","date":"2026-01-01","source":"manual","sourceKey":"fictional-example-note","data":{"title":"虚构示例：新年随记","notes":"这是可选示例，初次启动不会写入。"}},
+    {"kind":"exercise","date":"2026-01-01","source":"manual","sourceKey":"fictional-example-walk","data":{"title":"虚构示例：散步","duration":20,"category":"步行"}}
+  ]
+}
